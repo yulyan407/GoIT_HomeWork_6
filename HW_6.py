@@ -17,6 +17,6 @@ def normalize(name):
         name = name.replace(symbol, '_')
     return name.translate(TRANS)
 
-name = 'dhhjПШb8*fg/_gh,hj.78неук'
+name = 'dh5hjПШb8*fg/_gh,hj.78неук'
 
 print(normalize(name))
