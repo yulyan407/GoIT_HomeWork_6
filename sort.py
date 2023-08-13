@@ -1,6 +1,7 @@
 import re
 from pathlib import Path
 import sys
+import shutil
 
 CYRILLIC_SYMBOLS = "абвгдеёжзийклмнопрстуфхцчшщъыьэюяєіїґ"
 TRANSLATION = ("a", "b", "v", "g", "d", "e", "e", "j", "z", "i", "j", "k", "l", "m", "n", "o", "p", "r", "s", "t", "u",
@@ -37,12 +38,36 @@ def normalize(name):
     new_name = re.sub(r'\W', "_", new_name)
     return f"{new_name}.{extension}"
 
-def scan(folder):
+def hande_file(file_name, folder, dist):
+    target_folder = folder / dist
+    target_folder.mkdir(exist_ok=True)
+    file_name.replace(target_folder/normalize(file_name.name))
+
+def handle_archive(path, folder, dist):
+    target_folder = folder / dist
+    target_folder.mkdir(exist_ok=True)
+
+    norm_name = normalize(path.name.replace(".zip", '').replace(".gz", '').replace(".tar", ''))
+
+    archive_folder = folder / norm_name
+    archive_folder.mkdir(exist_ok=True)
+
+    try:
+        shutil.unpack_archive(str(path.resolve()), str(path.resolve()))
+    except shutil.ReadError:
+        archive_folder.rmdir()
+        return
+    except FileNotFoundError:
+        archive_folder.rmdir()
+        return
+    path.unlink()
+
+def scan_sort(folder):
     for item in folder.iterdir():
         if item.is_dir():
             if item.name not in registered_extensions.keys():
                 folders.append(item)
-                scan(item)
+                scan_sort(item)
             continue
 
         extension = get_extensions(file_name=item.name)
@@ -50,28 +75,36 @@ def scan(folder):
         if extension in registered_extensions['IMAGES']:
             image_files_list.append(new_name)
             extensions.append(extension)
+            hande_file(new_name, folder, 'IMAGES')
         elif extension in registered_extensions['VIDEOS']:
             video_files_list.append(new_name)
             extensions.append(extension)
+            hande_file(new_name, folder, 'VIDEOS')
         elif extension in registered_extensions['DOCUMENTS']:
             document_files_list.append(new_name)
             extensions.append(extension)
+            hande_file(new_name, folder, 'DOCUMENTS')
         elif extension in registered_extensions['MUSIC']:
             music_files_list.append(new_name)
             extensions.append(extension)
+            hande_file(new_name, folder, 'MUSIC')
         elif extension in registered_extensions['ARCHIVES']:
             archive_files_list.append(new_name)
             extensions.append(extension)
+            handle_archive(new_name, folder, "ARCHIVE")
         else:
             other_files_list.append(new_name)
             unknown_extensions.append(extension)
+            target_folder = folder / 'OTHERS'
+            target_folder.mkdir(exist_ok=True)
+            new_name.replace(target_folder / new_name)
 
 
 if __name__ == '__main__':
     path = sys.argv[1]
     print(f"Start in {path}")
 
-    scan(Path(path))
+    scan_sort(Path(path))
 
     print(f"image files: {image_files_list}\n")
     print(f"video files: {video_files_list}\n")
