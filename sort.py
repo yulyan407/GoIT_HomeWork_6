@@ -27,7 +27,6 @@ document_files_list = list()
 music_files_list = list()
 archive_files_list = list()
 other_files_list = list()
-folders = list()
 
 def get_extensions(file_name):
     return Path(file_name).suffix[1:].upper()
@@ -41,7 +40,7 @@ def normalize(name):
 def hande_file(file_name, folder, dist):
     target_folder = folder / dist
     target_folder.mkdir(exist_ok=True)
-    file_name.replace(target_folder/normalize(file_name.name))
+    file_name.rename(target_folder/normalize(file_name.name))
 
 def handle_archive(path, folder, dist):
     target_folder = folder / dist
@@ -66,7 +65,6 @@ def scan_sort(folder):
     for item in folder.iterdir():
         if item.is_dir():
             if item.name not in registered_extensions.keys():
-                folders.append(item)
                 scan_sort(item)
             continue
 
@@ -97,7 +95,20 @@ def scan_sort(folder):
             unknown_extensions.append(extension)
             target_folder = folder / 'OTHERS'
             target_folder.mkdir(exist_ok=True)
-            new_name.replace(target_folder / new_name.name)
+            new_name.rename(target_folder / new_name.name)
+
+def delete_empty_folders(path):
+    """
+    Delete empty folders
+    :param path: user path -> Path
+    :return: None
+    """
+    for item in path.glob('**/*'):
+        if item.is_dir():
+            try:
+                item.rmdir()
+            except OSError:
+                pass
 
 
 if __name__ == '__main__':
@@ -105,6 +116,8 @@ if __name__ == '__main__':
     print(f"Start in {path}")
 
     scan_sort(Path(path))
+
+    delete_empty_folders(Path(path))
 
     print(f"Image files: {image_files_list}\n")
     print(f"Video files: {video_files_list}\n")
