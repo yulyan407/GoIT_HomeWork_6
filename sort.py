@@ -29,20 +29,44 @@ archive_files_list = list()
 other_files_list = list()
 
 def get_extensions(file_name):
+    """
+    Return extension of the file without dot
+    :param path: user path -> Path
+    :return: str
+    """
     return Path(file_name).suffix[1:].upper()
 
 def normalize(name):
+    """
+    Normalize file name by transliterating to cyrillic, replacing invalid symbols to "_"
+    :param name: user name -> str
+    :return: str
+    """
     name, extension = name.split('.')
     new_name = name.translate(TRANS)
     new_name = re.sub(r'\W', "_", new_name)
     return f"{new_name}.{extension}"
 
 def hande_file(file_name, folder, dist):
+    """
+    Move file in param file_name to the target folder = folder / dist
+    :param file_name: user Path -> Path
+           folder: user Path -> Path
+           dist: user name -> str
+    :return: None
+    """
     target_folder = folder / dist
     target_folder.mkdir(exist_ok=True)
     file_name.rename(target_folder/normalize(file_name.name))
 
 def handle_archive(path, folder, dist):
+    """
+    Unpack the archive  file in param path to the target folder = folder / dist
+    :param path: user Path -> Path
+           folder: user Path -> Path
+           dist: user name -> str
+    :return: None
+    """
     target_folder = folder / dist
     target_folder.mkdir(exist_ok=True)
 
@@ -61,11 +85,23 @@ def handle_archive(path, folder, dist):
         return
     path.unlink()
 
-def scan_sort(folder):
+def scan(folder):
+    """
+    Scan all folders and files in folder and sort by extensions
+    :param folder: user path -> Path()
+    :return: unknown_extensions -> list,
+            extensions -> list,
+            image_files_list -> list,
+            video_files_list -> list,
+            document_files_list -> list,
+            music_files_list -> list,
+            archive_files_list -> list,
+            other_files_list -> list,
+    """
     for item in folder.iterdir():
         if item.is_dir():
             if item.name not in registered_extensions.keys():
-                scan_sort(item)
+                scan(item)
             continue
 
         extension = get_extensions(file_name=item.name)
@@ -73,38 +109,54 @@ def scan_sort(folder):
         if extension in registered_extensions['IMAGES']:
             image_files_list.append(new_name)
             extensions.append(extension)
-            hande_file(new_name, folder, 'IMAGES')
         elif extension in registered_extensions['VIDEOS']:
             video_files_list.append(new_name)
             extensions.append(extension)
-            hande_file(new_name, folder, 'VIDEOS')
         elif extension in registered_extensions['DOCUMENTS']:
             document_files_list.append(new_name)
             extensions.append(extension)
-            hande_file(new_name, folder, 'DOCUMENTS')
         elif extension in registered_extensions['MUSIC']:
             music_files_list.append(new_name)
             extensions.append(extension)
-            hande_file(new_name, folder, 'MUSIC')
         elif extension in registered_extensions['ARCHIVES']:
             archive_files_list.append(new_name)
             extensions.append(extension)
-            handle_archive(new_name, folder, "ARCHIVE")
         else:
             other_files_list.append(new_name)
             unknown_extensions.append(extension)
-            target_folder = folder / 'OTHERS'
-            target_folder.mkdir(exist_ok=True)
-            new_name.rename(target_folder / new_name.name)
 
-def delete_empty_folders(path):
+def group_files(folder):
     """
-    Delete empty folders
+    Group files in param folder
+    :param folder: user Path -> Path
+    :return: None
+    """
+    scan(Path(folder))
+
+    for file in image_files_list:
+        hande_file(file, folder, 'IMAGES')
+    for file in video_files_list:
+        hande_file(file, folder, 'VIDEOS')
+    for file in document_files_list:
+        hande_file(file, folder, 'DOCUMENTS')
+    for file in music_files_list:
+        hande_file(file, folder, 'MUSIC')
+    for file in archive_files_list:
+        handle_archive(file, folder, "ARCHIVE")
+    for file in other_files_list:
+        target_folder = folder / 'OTHERS'
+        target_folder.mkdir(exist_ok=True)
+        file.rename(target_folder / file.name)
+
+def remove_empty_folders(path):
+    """
+    Remove empty folders
     :param path: user path -> Path
     :return: None
     """
-    for item in path.glob('**/*'):
+    for item in path.iterdir():
         if item.is_dir():
+            remove_empty_folders(item)
             try:
                 item.rmdir()
             except OSError:
@@ -115,9 +167,9 @@ if __name__ == '__main__':
     path = sys.argv[1]
     print(f"Start in {path}")
 
-    scan_sort(Path(path))
+    group_files(Path(path))
 
-    delete_empty_folders(Path(path))
+    remove_empty_folders(Path(path))
 
     print(f"Image files: {image_files_list}\n")
     print(f"Video files: {video_files_list}\n")
