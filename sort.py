@@ -106,11 +106,11 @@ if __name__ == '__main__':
 
     scan_sort(Path(path))
 
-    print(f"image files: {image_files_list}\n")
-    print(f"video files: {video_files_list}\n")
-    print(f"document files: {document_files_list}\n")
-    print(f"music files: {music_files_list}\n")
-    print(f"archive files: {archive_files_list}\n")
-    print(f"unknown files: {other_files_list}\n")
+    print(f"Image files: {image_files_list}\n")
+    print(f"Video files: {video_files_list}\n")
+    print(f"Document files: {document_files_list}\n")
+    print(f"Music files: {music_files_list}\n")
+    print(f"Archive files: {archive_files_list}\n")
+    print(f"Unknown files: {other_files_list}\n")
     print(f"All extensions: {set(extensions)}\n")
     print(f"Unknown extensions: {set(unknown_extensions)}\n")
