@@ -47,13 +47,13 @@ def handle_archive(path, folder, dist):
     target_folder = folder / dist
     target_folder.mkdir(exist_ok=True)
 
-    norm_name = normalize(path.name.replace(".zip", '').replace(".gz", '').replace(".tar", ''))
+    norm_name = normalize(path.name).replace(".zip", '').replace(".gz", '').replace(".tar", '')
 
-    archive_folder = folder / norm_name
+    archive_folder = target_folder / norm_name
     archive_folder.mkdir(exist_ok=True)
 
     try:
-        shutil.unpack_archive(str(path.resolve()), str(path.resolve()))
+        shutil.unpack_archive(str(path.resolve()), archive_folder)
     except shutil.ReadError:
         archive_folder.rmdir()
         return
@@ -97,7 +97,7 @@ def scan_sort(folder):
             unknown_extensions.append(extension)
             target_folder = folder / 'OTHERS'
             target_folder.mkdir(exist_ok=True)
-            new_name.replace(target_folder / new_name)
+            new_name.replace(target_folder / new_name.name)
 
 
 if __name__ == '__main__':
