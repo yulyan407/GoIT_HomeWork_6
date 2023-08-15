@@ -163,7 +163,7 @@ def remove_empty_folders(path):
                 pass
 
 
-if __name__ == '__main__':
+def main():
     path = sys.argv[1]
     print(f"Start in {path}")
 
@@ -179,3 +179,6 @@ if __name__ == '__main__':
     print(f"Unknown files: {other_files_list}\n")
     print(f"All extensions: {set(extensions)}\n")
     print(f"Unknown extensions: {set(unknown_extensions)}\n")
+
+if __name__ == '__main__':
+    main()
